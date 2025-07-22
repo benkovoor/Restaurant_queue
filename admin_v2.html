@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Management Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6f42c1;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+            --card-shadow: rgba(31, 38, 135, 0.2);
+            --card-border: rgba(255, 255, 255, 0.18);
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            padding: 24px;
+            align-items: start;
+        }
+
+        .main-content, .sidebar {
+            display: grid;
+            gap: 24px;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 24px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 var(--card-shadow);
+            border: 1px solid var(--card-border);
+            padding: 24px;
+            overflow-x: auto;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card h2 svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            vertical-align: middle;
+        }
+
+        th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        td .wait-time {
+            font-weight: 600;
+            color: var(--warning-color);
+        }
+
+        td.empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-success { background-color: var(--success-color); }
+        .btn-warning { background-color: var(--warning-color); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        .controls-grid { display: grid; gap: 15px; }
+        .control-item { display: flex; justify-content: space-between; align-items: center; }
+
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .table-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+        .table-box {
+            padding: 15px 10px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
+        .table-box:hover { transform: translateY(-3px); }
+        .table-box h3 { margin: 0 0 5px 0; font-size: 1rem; font-weight: 600; }
+        .table-box p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+        .table-box .status { font-weight: bold; margin-top: 5px; text-transform: uppercase; font-size: 0.75rem; }
+        
+        .table-box.occupied { 
+            background-color: #fff5f5; 
+            border-color: var(--danger-color); 
+            animation: pulse 2s infinite;
+        }
+        .table-box.occupied .status { color: var(--danger-color); }
+        
+        .table-box.free { background-color: #f8fff9; border-color: var(--success-color); }
+        .table-box.free .status { color: var(--success-color); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        .manual-seat-form { display: grid; gap: 12px; }
+        .manual-seat-form label { font-weight: 500; font-size: 0.9rem; }
+        .manual-seat-form select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; background-color: #fff; }
+
+        @media (max-width: 1200px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="main-content">
+            
+            <div class="card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M15 14s1 0 1-1-1-4-6-4-6 3-6 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002H15a1 1 0 0 0 1-1 1 1 0 0 0-1-1H2a1 1 0 0 0-1 1 1 1 0 0 0 1 1zM11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/></svg>
+                    <span>Occupied Tables ({{ occupied_tables|length }})</span>
+                </h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th>Customer Name</th>
+                            <th>Party Size</th>
+                            <th>Phone</th>
+                            <th>Seated At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for seating in occupied_tables %}
+                        <tr>
+                            <td><strong>{{ seating.table_number }}</strong></td>
+                            <td>{{ seating.customer_name }}</td>
+                            <td>{{ seating.people_count }}</td>
+                            <td>{{ seating.customer_phone_number }}</td>
+                            <td>
+                                {% if seating.occupied_timestamp %}
+                                    {{ seating.occupied_timestamp.strftime('%I:%M %p') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{{ url_for('free_table') }}" method="post">
+                                    <input type="hidden" name="table_number" value="{{ seating.table_number }}">
+                                    <button type="submit" class="btn btn-warning btn-sm">Mark as Free</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-state">No tables are currently occupied.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/></svg>
+                    <span>Waiting Queue ({{ customers|length }})</span>
+                </h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th># People</th>
+                            <th>Wait Time</th>
+                            <th>Phone</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.name }}</td>
+                            <td>{{ customer.people_count }}</td>
+                            <td class="wait-time" data-timestamp="{{ customer.timestamp }}">Calculating...</td>
+                            <td>{{ customer.phone_number }}</td>
+                            <td>
+                                <form action="{{ url_for('remove_customer') }}" method="post">
+                                    <input type="hidden" name="customer_id" value="{{ customer.id }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="empty-state">The waiting queue is empty.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <div class="sidebar">
+            
+            <div class="card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1z"/></svg>
+                    <span>System Controls</span>
+                </h2>
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <span>Auto-Allocator Status</span>
+                        <form action="{{ url_for('toggle_auto_allocator') }}" method="post" id="toggle-form">
+                            <input type="hidden" name="current_status" value="{{ auto_allocator_status }}">
+                            <label class="switch">
+                                <input type="checkbox" onchange="document.getElementById('toggle-form').submit();" {% if auto_allocator_status == 'ON' %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </form>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid var(--card-border);">
+                    <div class="control-item">
+                        <span>Manual Allocation</span>
+                        <form action="{{ url_for('run_auto_seat') }}" method="post">
+                            <button type="submit" class="btn">Run Now</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 0A1.5 1.5 0 0 0 0 1.5v2A1.5 1.5 0 0 0 1.5 5h2A1.5 1.5 0 0 0 5 3.5v-2A1.5 1.5 0 0 0 3.5 0zM1 1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zM1.5 7A1.5 1.5 0 0 0 0 8.5v2A1.5 1.5 0 0 0 1.5 12h2A1.5 1.5 0 0 0 5 10.5v-2A1.5 1.5 0 0 0 3.5 7zM1 8.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zM7 1.5A1.5 1.5 0 0 0 5.5 3h2A1.5 1.5 0 0 0 9 1.5v-2A1.5 1.5 0 0 0 7.5 0h-2A1.5 1.5 0 0 0 4 1.5zM7 1a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zM6.5 7A1.5 1.5 0 0 0 5 8.5v2A1.5 1.5 0 0 0 6.5 12h2A1.5 1.5 0 0 0 10 10.5v-2A1.5 1.5 0 0 0 8.5 7zM6 8.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zM12.5 0A1.5 1.5 0 0 0 11 1.5v2A1.5 1.5 0 0 0 12.5 5h2A1.5 1.5 0 0 0 16 3.5v-2A1.5 1.5 0 0 0 14.5 0zM12 1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zM11.5 7A1.5 1.5 0 0 0 10 8.5v2A1.5 1.5 0 0 0 11.5 12h2A1.5 1.5 0 0 0 15 10.5v-2A1.5 1.5 0 0 0 13.5 7zM11 8.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5z"/></svg>
+                    <span>Table Status</span>
+                </h2>
+                <div class="table-status-grid">
+                    {% for table in all_tables %}
+                    <div class="table-box {{ 'occupied' if table.status == 'occupied' else 'free' }}">
+                        <h3>{{ table.table_number }}</h3>
+                        <p>Cap: {{ table.capacity }}</p>
+                        <p class="status"><strong>{{ table.status }}</strong></p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/> <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/></svg>
+                    <span>Seat Customer Manually</span>
+                </h2>
+                <form action="{{ url_for('seat_manually') }}" method="post" class="manual-seat-form">
+                    <div>
+                        <label for="customer">Customer:</label>
+                        <select name="customer_id" id="customer" required>
+                            <option value="">-- Select from Queue --</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.people_count }}p)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="table">at Table:</label>
+                        <select name="table_id" id="table" required>
+                            <option value="">-- Select Free Table --</option>
+                            {% for table in free_tables %}
+                            <option value="{{ table.id }}">{{ table.table_number }} (Cap: {{ table.capacity }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Seat Manually</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function updateWaitTimes() {
+            const timeElements = document.querySelectorAll('.wait-time[data-timestamp]');
+            const now = new Date();
+
+            timeElements.forEach(el => {
+                const timestampStr = el.dataset.timestamp.replace(' ', 'T');
+                const waitingSince = new Date(timestampStr);
+                
+                if (isNaN(waitingSince.getTime())) {
+                    el.textContent = "Invalid date";
+                    return;
+                }
+
+                const diffSeconds = Math.floor((now - waitingSince) / 1000);
+                const minutes = Math.floor(diffSeconds / 60);
+                
+                if (minutes > 0) {
+                    el.textContent = `${minutes} min ago`;
+                } else {
+                    el.textContent = `${diffSeconds} sec ago`;
+                }
+            });
+        }
+
+        updateWaitTimes();
+        setInterval(updateWaitTimes, 10000);
+    });
+</script>
+
+</body>
+</html>
