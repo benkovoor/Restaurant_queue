@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Management Dashboard</title>
+    <style>
+        /* CSS Variables for easy theming */
+        :root {
+            --bg-color: #f0f2f5;
+            --sidebar-bg: #2c3e50;
+            --card-bg: #ffffff;
+            --text-color: #34495e;
+            --text-muted: #7f8c8d;
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --border-color: #ecf0f1;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* General Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Layout */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            padding: 24px;
+            align-items: start;
+        }
+
+        .main-content {
+            display: grid;
+            gap: 24px;
+        }
+
+        .sidebar {
+            display: grid;
+            gap: 24px;
+            position: sticky;
+            top: 24px;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            padding: 24px;
+            overflow-x: auto;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        tbody tr:hover {
+            background-color: #f5f7fa;
+        }
+        
+        td .wait-time {
+            font-weight: 600;
+            color: var(--warning-color);
+        }
+        td.empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-success { background-color: var(--success-color); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        
+        form { margin: 0; }
+
+        /* System Controls Card */
+        .controls-grid {
+            display: grid;
+            gap: 15px;
+        }
+        .control-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Toggle Switch for Auto-Allocator */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { display: none; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px; width: 26px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--success-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Table Status Grid */
+        .table-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+        .table-box {
+            border: 1px solid var(--border-color);
+            padding: 15px 10px;
+            border-radius: 6px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .table-box:hover { transform: translateY(-3px); }
+        .table-box h3 { margin: 0 0 5px 0; font-size: 1rem; }
+        .table-box p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+        .table-box .status { font-weight: bold; margin-top: 5px; }
+        
+        .table-box.occupied { background-color: #fff8f8; border-color: var(--danger-color); }
+        .table-box.occupied .status { color: var(--danger-color); }
+        
+        .table-box.free { background-color: #f8fff9; border-color: var(--success-color); }
+        .table-box.free .status { color: var(--success-color); }
+
+        /* Manual Seating Form */
+        .manual-seat-form { display: grid; gap: 10px; }
+        .manual-seat-form select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        
+        /* Media Queries for Responsiveness */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="main-content">
+            
+            <div class="card">
+                <h2>Occupied Tables ({{ occupied_tables|length }})</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th>Customer Name</th>
+                            <th>Party Size</th>
+                            <th>Seated At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for seating in occupied_tables %}
+                        <tr>
+                            <td><strong>{{ seating.table_number }}</strong></td>
+                            <td>{{ seating.customer_name }}</td>
+                            <td>{{ seating.people_count }}</td>
+                            <td>{{ seating.occupied_timestamp.strftime('%I:%M %p') }}</td>
+                            <td>
+                                <form action="{{ url_for('free_table') }}" method="post">
+                                    <input type="hidden" name="table_number" value="{{ seating.table_number }}">
+                                    <button type="submit" class="btn btn-warning btn-sm">Mark as Free</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="empty-state">No tables are currently occupied.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2>Waiting Queue ({{ customers|length }})</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th># People</th>
+                            <th>Wait Time</th>
+                            <th>Phone</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ customer.name }}</td>
+                            <td>{{ customer.people_count }}</td>
+                            <td class="wait-time" data-timestamp="{{ customer.timestamp }}">Calculating...</td>
+                            <td>{{ customer.phone_number }}</td>
+                            <td>
+                                <form action="{{ url_for('remove_customer') }}" method="post">
+                                    <input type="hidden" name="customer_id" value="{{ customer.id }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="empty-state">The waiting queue is empty.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <div class="sidebar">
+            
+            <div class="card">
+                <h2>System Controls</h2>
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <span>Auto-Allocator Status</span>
+                        <form action="{{ url_for('toggle_auto_allocator') }}" method="post" id="toggle-form">
+                            <input type="hidden" name="current_status" value="{{ auto_allocator_status }}">
+                            <label class="switch">
+                                <input type="checkbox" onchange="document.getElementById('toggle-form').submit();" {% if auto_allocator_status == 'ON' %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </form>
+                    </div>
+                    <hr>
+                    <div class="control-item">
+                        <span>Manual Allocation</span>
+                        <form action="{{ url_for('run_auto_seat') }}" method="post">
+                            <button type="submit" class="btn">Run Now</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Table Status</h2>
+                <div class="table-status-grid">
+                    {% for table in all_tables %}
+                    <div class="table-box {{ 'occupied' if table.status == 'occupied' else 'free' }}">
+                        <h3>{{ table.table_number }}</h3>
+                        <p>Cap: {{ table.capacity }}</p>
+                        <p class="status"><strong>{{ table.status|capitalize }}</strong></p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Seat Customer Manually</h2>
+                <form action="{{ url_for('seat_manually') }}" method="post" class="manual-seat-form">
+                    <div>
+                        <label for="customer">Customer:</label>
+                        <select name="customer_id" id="customer" required>
+                            <option value="">-- Select from Queue --</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.people_count }}p)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="table">at Table:</label>
+                        <select name="table_id" id="table" required>
+                            <option value="">-- Select Free Table --</option>
+                            {% for table in free_tables %}
+                            <option value="{{ table.id }}">{{ table.table_number }} (Cap: {{ table.capacity }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="justify-content: center;">Seat Manually</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to calculate and display how long a customer has been waiting.
+        function updateWaitTimes() {
+            const timeElements = document.querySelectorAll('.wait-time[data-timestamp]');
+            const now = new Date();
+
+            timeElements.forEach(el => {
+                // The timestamp from SQLite is 'YYYY-MM-DD HH:MM:SS'. 
+                // JS Date parsing is more reliable with 'T' separator.
+                const timestampStr = el.dataset.timestamp.replace(' ', 'T');
+                const waitingSince = new Date(timestampStr);
+                
+                if (isNaN(waitingSince.getTime())) {
+                    el.textContent = "Invalid date";
+                    return;
+                }
+
+                const diffSeconds = Math.floor((now - waitingSince) / 1000);
+                const minutes = Math.floor(diffSeconds / 60);
+                const seconds = diffSeconds % 60;
+                
+                if (minutes > 0) {
+                    el.textContent = `${minutes} min ${seconds} sec`;
+                } else {
+                    el.textContent = `${seconds} sec`;
+                }
+            });
+        }
+
+        // Run the function immediately on page load
+        updateWaitTimes();
+        
+        // And then update it every 10 seconds to keep it current
+        setInterval(updateWaitTimes, 10000);
+    });
+</script>
+
+</body>
+</html>
